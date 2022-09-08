@@ -20,7 +20,9 @@
                 "-I${workspaceFolder}\\include\\imgui",
                 "-lallegro",
                 "-lallegro_primitives",
-                "-lnetapi32"
+                "-lnetapi32", //For Net User functions
+                "-luuid", //For object linking functions (Shortcuts)
+                "-lole32" //For Component Object Model functions (COM)
             ],
             "options": {
                 "cwd": "${fileDirname}"

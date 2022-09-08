@@ -7,6 +7,12 @@
 #include <thread>
 #include <chrono>
 #include <Windows.h>
+#include <winnls.h>
+#include <shobjidl.h>
+#include <objbase.h>
+#include <objidl.h>
+#include <shlguid.h>
+#include <shlobj.h>
 
 #include "RegistryKey.h"
 
@@ -28,13 +34,19 @@ public:
 	ProgramManager(void);
 	~ProgramManager(void);
 
-	static std::string GetLatestInstallerDirectory(std::string path_to_search);
-	static std::string GetLatestInstaller(std::string path_to_search, std::string expected_installer_name, std::string optional = "");
-
 	static bool StartProcess(std::string cmd);
 
+	/**
+	 * @credits https://stackoverflow.com/questions/46477511/how-to-create-shortcut-with-win32-api-and-c-language
+	 * @credits https://stackoverflow.com/questions/63443681/creating-a-shortcut-lnk-using-windows-api
+	*/
+	static HRESULT CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, LPCWSTR lpszDesc, LPCWSTR lpszarg);
+
+	static std::vector<std::string> InstallMSSQL();
 	static std::vector<std::string> UninstallMSSQL();
 
+	static std::string GetLatestInstallerDirectory(std::string path_to_search);
+	static std::string GetLatestInstaller(std::string path_to_search, std::string expected_installer_name, std::string optional = "");
 	static std::vector<Software>* GetInstalledPrograms(bool IncludeUpdates);
 
 private:

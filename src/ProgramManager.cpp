@@ -26,70 +26,6 @@ ProgramManager::~ProgramManager(void)
 {
 }
 
-std::string ProgramManager::GetLatestInstallerDirectory(std::string path_to_search)
-{
-	std::vector<std::string> folders;
-	for (auto& p : std::filesystem::directory_iterator(path_to_search))
-	{
-		if (p.is_directory())
-		{
-			std::string temp_folder(p.path().string());
-			if(temp_folder.find("Install") != std::string::npos)
-			{
-				folders.push_back(p.path().string());
-			}
-		}
-	}
-
-	std::string most_recent_install_folder = "";
-	if(!folders.empty())
-	{
-		most_recent_install_folder = folders.at(0);
-		for(auto& folder : folders)
-		{
-			//String comparison works fine, if the format is the same.
-			if(folder > most_recent_install_folder)
-			{
-				most_recent_install_folder = folder;
-			}
-		}
-	}
-
-	return most_recent_install_folder;
-}
-
-std::string ProgramManager::GetLatestInstaller(std::string path_to_search, std::string expected_installer_name, std::string optional)
-{
-	std::cout << "Searching for latest installer in " << path_to_search << std::endl;
-	std::vector<std::string> software_installers;
-	for(auto& p : std::filesystem::recursive_directory_iterator(path_to_search))
-	{
-		std::string temp(p.path().string());
-		if(temp.find(expected_installer_name) != std::string::npos)
-		{
-			if(!optional.empty() && temp.find(optional) != std::string::npos)
-			{
-				software_installers.push_back(temp);
-			}
-			else
-			{
-				software_installers.push_back(temp);
-			}
-		}
-	}
-
-	std::string newest = software_installers.at(0);
-	for(auto& folder : software_installers)
-	{
-		if(folder > newest)
-		{
-			newest = folder;
-		}
-	}
-
-	return newest;
-}
-
 //Start process which takes std::string as the argument
 bool ProgramManager::StartProcess(std::string cmd)
 {
@@ -124,6 +60,48 @@ bool ProgramManager::StartProcess(std::string cmd)
 	CloseHandle(pi.hThread);
 
 	return 0;
+}
+
+HRESULT ProgramManager::CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, LPCWSTR lpszDesc, LPCWSTR lpszarg)
+{
+	/**
+	 * @credit
+	 * https://stackoverflow.com/questions/46477511/how-to-create-shortcut-with-win32-api-and-c-language
+	 * https://stackoverflow.com/questions/63443681/creating-a-shortcut-lnk-using-windows-api
+	*/
+
+	CoInitialize(NULL);
+
+    HRESULT hres;
+    IShellLinkW* psl;
+
+    // Get a pointer to the IShellLink interface. It is assumed that CoInitialize
+    // has already been called.
+    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&psl));
+    if (SUCCEEDED(hres))
+    {
+        IPersistFile* ppf;
+
+        // Set the path to the shortcut target and add the description.
+        psl->SetPath(lpszPathObj1);
+        psl->SetArguments(lpszarg);
+        psl->SetDescription(lpszDesc);
+
+        // Query IShellLink for the IPersistFile interface, used for saving the
+        // shortcut in persistent storage.
+        hres = psl->QueryInterface(IID_PPV_ARGS(&ppf));
+        if (SUCCEEDED(hres))
+        {
+            // Save the link by calling IPersistFile::Save.
+            hres = ppf->Save(lpszPathLink, TRUE);
+            ppf->Release();
+        }
+        psl->Release();
+    }
+
+	CoUninitialize();
+
+    return hres;
 }
 
 std::vector<std::string> ProgramManager::UninstallMSSQL()
@@ -195,7 +173,90 @@ std::vector<std::string> ProgramManager::UninstallMSSQL()
 		std::this_thread::sleep_for(std::chrono::milliseconds(500ms));
 	}
 
+	std::rename("C:\\Program Files\\Microsoft SQL Server", "C:\\Program Files\\Microsoft SQL Server.old");
+	std::rename("C:\\Program Files (x86)\\Microsoft SQL Server", "C:\\Program Files (x86)\\Microsoft SQL Server.old");
+
 	return uninstalled_programs;
+}
+
+std::vector<std::string> ProgramManager::InstallMSSQL()
+{
+	std::vector<std::string> installed_programs;
+
+	std::string install_cmd = "C:\\Program Files\\Microsoft SQL Server\\140\\Setup.exe /ACTION=INSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /QUIET /IACCEPTSQLSERVERLICENSETERMS /SQLSVCACCOUNT=\"NT AUTHORITY\\NETWORK SERVICE\" /SQLSYSADMINACCOUNTS=\"BUILTIN\\Administrators\" /AGTSVCACCOUNT=\"NT AUTHORITY\\NETWORK SERVICE\" /AGTSVCSTARTUPTYPE=Automatic /SQLSVCSTARTUPTYPE=Automatic /SECURITYMODE=SQL /SAPWD=Password123 /TCPENABLED=1 /NPENABLED=0 /IACCEPTSQLSERVERLICENSETERMS";
+
+	//Start install process from the installer and wait for it to finish
+	//Returns 0 if successful
+	if(ProgramManager::StartProcess(&install_cmd[0]) == 0)
+	{
+		installed_programs.push_back("Microsoft SQL Server 2017");
+	}
+
+	return installed_programs;
+}
+
+std::string ProgramManager::GetLatestInstallerDirectory(std::string path_to_search)
+{
+	std::vector<std::string> folders;
+	for (auto& p : std::filesystem::directory_iterator(path_to_search))
+	{
+		if (p.is_directory())
+		{
+			std::string temp_folder(p.path().string());
+			if(temp_folder.find("Install") != std::string::npos)
+			{
+				folders.push_back(p.path().string());
+			}
+		}
+	}
+
+	std::string most_recent_install_folder = "";
+	if(!folders.empty())
+	{
+		most_recent_install_folder = folders.at(0);
+		for(auto& folder : folders)
+		{
+			//String comparison works fine, if the format is the same.
+			if(folder > most_recent_install_folder)
+			{
+				most_recent_install_folder = folder;
+			}
+		}
+	}
+
+	return most_recent_install_folder;
+}
+
+std::string ProgramManager::GetLatestInstaller(std::string path_to_search, std::string expected_installer_name, std::string optional)
+{
+	std::cout << "Searching for latest installer in " << path_to_search << std::endl;
+	std::vector<std::string> software_installers;
+	for(auto& p : std::filesystem::recursive_directory_iterator(path_to_search))
+	{
+		std::string temp(p.path().string());
+		if(temp.find(expected_installer_name) != std::string::npos)
+		{
+			if(!optional.empty() && temp.find(optional) != std::string::npos)
+			{
+				software_installers.push_back(temp);
+			}
+			else
+			{
+				software_installers.push_back(temp);
+			}
+		}
+	}
+
+	std::string newest = software_installers.at(0);
+	for(auto& folder : software_installers)
+	{
+		if(folder > newest)
+		{
+			newest = folder;
+		}
+	}
+
+	return newest;
 }
 
 std::vector<Software>* ProgramManager::GetInstalledPrograms(bool IncludeUpdates)

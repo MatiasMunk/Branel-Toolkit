@@ -47,7 +47,7 @@ void GUI::Process()
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize;
 
-    if(ImGui::BeginPopupModal("Uninstaller", NULL, flags))
+    if(ImGui::BeginPopupModal("Uninstall result", NULL, flags))
     {
         if(this->uninstalled_programs.size() > 0)
         {
@@ -75,7 +75,7 @@ void GUI::Process()
         ImGui::EndPopup();
     }
 
-    if(ImGui::BeginPopupModal("admin_privileges", NULL, flags))
+    if(ImGui::BeginPopupModal("No rights!", NULL, flags))
     {
         ImGui::Text("Could not complete action.");
         ImGui::Text("Did run the program as administrator?");
@@ -86,7 +86,7 @@ void GUI::Process()
 
         ImGui::EndPopup();
     }
-    else if(ImGui::BeginPopupModal("create_branel_users", NULL, flags))
+    else if(ImGui::BeginPopupModal("Create Branel Users", NULL, flags))
     {
         ImGui::Text("Do you want to create the users?");
         ImGui::Text("BrAdmin");
@@ -106,8 +106,10 @@ void GUI::Process()
     }
     else if(ImGui::BeginPopupModal("Backup", NULL, flags))
     {
-        ImGui::Text("This will remove MSSQL.");
+        ImGui::Text("Do you want to remove all SQL Server programs?");
+        ImGui::Text("WARNING:");
         ImGui::Text("Data will be removed during this process.");
+        ImGui::Separator();
         ImGui::Text("Did you remember to backup?");
 
         if(ImGui::Button("Yes, continue."))
@@ -123,14 +125,19 @@ void GUI::Process()
 
         ImGui::EndPopup();
     }
-    else if(ImGui::BeginPopupModal("install_mssql", NULL, flags))
+    else if(ImGui::BeginPopupModal("Install SQL Server 19", NULL, flags))
     {
-        ImGui::Text("Do you want to install MSSQL?");
+        ImGui::Text("Do you want to install SQL Server 19?");
+        ImGui::Text("WARNING:");
+        ImGui::Text("This can cause potential data loss");
+        ImGui::Text("of existing databases.");
+        ImGui::Separator();
+        ImGui::Text("Did you remember to backup?");
 
         if(ImGui::Button("Yes, continue."))
         {
             did_backup = true;
-            //this->InstallMSSQL();
+            this->InstallSoftware(Program::SQLServer19);
             ImGui::CloseCurrentPopup();
         }
         if(ImGui::Button("Cancel"))
@@ -140,7 +147,44 @@ void GUI::Process()
 
         ImGui::EndPopup();
     }
-    else if(ImGui::BeginPopupModal("update_software", NULL, flags))
+    else if(ImGui::BeginPopupModal("Install CU for SQL Server 19", NULL, flags))
+    {
+        ImGui::Text("Do you want to update the following software?");
+        ImGui::Separator();
+        ImGui::Text("Cumulative Update Package (KB5011644)");
+        ImGui::Text("for SQL Server 19");
+
+        if(ImGui::Button("Yes, continue."))
+        {
+            this->InstallSoftware(Program::SQLCU);
+            ImGui::CloseCurrentPopup();
+        }
+        if(ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+    else if(ImGui::BeginPopupModal("Install SQL Management Studio", NULL, flags))
+    {
+        ImGui::Text("Do you want to update the following software?");
+        ImGui::Separator();
+        ImGui::Text("SQL Server Management Studio 18");
+
+        if(ImGui::Button("Yes, continue."))
+        {
+            this->InstallSoftware(Program::SQLManagementStudio);
+            ImGui::CloseCurrentPopup();
+        }
+        if(ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+    else if(ImGui::BeginPopupModal("Update Software", NULL, flags))
     {
         ImGui::Text("Do you want to update the following software?");
         ImGui::Separator();
@@ -149,7 +193,7 @@ void GUI::Process()
 
         if(ImGui::Button("Yes, continue."))
         {
-            this->UpdateSoftware(Program::All);
+            this->InstallSoftware(Program::All);
             ImGui::CloseCurrentPopup();
         }
         if(ImGui::Button("Cancel"))
@@ -159,13 +203,13 @@ void GUI::Process()
 
         ImGui::EndPopup();
     }
-    else if(ImGui::BeginPopupModal("update_teamviewer", NULL, flags))
+    else if(ImGui::BeginPopupModal("Update TeamViewer", NULL, flags))
     {
         ImGui::Text("Do you want to update TeamViewer?");
 
         if(ImGui::Button("Yes, continue."))
         {
-            this->UpdateSoftware(Program::TeamViewer);
+            this->InstallSoftware(Program::TeamViewer);
             ImGui::CloseCurrentPopup();
         }
         if(ImGui::Button("Cancel"))
@@ -175,15 +219,21 @@ void GUI::Process()
 
         ImGui::EndPopup();
     }
-    else if(ImGui::BeginPopupModal("install_result", NULL, flags))
+    else if(ImGui::BeginPopupModal("Install Result", NULL, flags))
     {
         if(this->installed_programs.size() > 0)
         {
-            ImGui::Text("The following software has been updated.");
+            ImGui::Text("The following software has been installed.");
             ImGui::Separator();
             for(auto& program : this->installed_programs)
             {
                 ImGui::Text(program.c_str());
+                if(program == "SQL Server 2019")
+                {
+                    ImGui::Separator();
+                    ImGui::Text("Don't forget to configure SQL Server!");
+                    ImGui::Text("C:\\Windows\\SysWOW64\\SQLServerManager15.msc");
+                }
             }
             if(ImGui::Button("OK"))
             {
@@ -247,23 +297,31 @@ void GUI::Index()
         {
             if(ImGui::Button("Create Branel Users"))
         {
-            action = "create_branel_users";
+            action = "Create Branel Users";
         }
             ImGui::EndTabItem();
         }
         if(ImGui::BeginTabItem("Installers"))
         {
-            if(ImGui::Button("Install MSSQL"))
+            if(ImGui::Button("Install SQL Server 19"))
             {
-                action = "install_mssql";
+                action = "Install SQL Server 19";
+            }
+            if(ImGui::Button("Install CU for SQL Server 19"))
+            {
+                action = "Install CU for SQL Server 19";
+            }
+            if(ImGui::Button("Install SQL Management Studio"))
+            {
+                action = "Install SQL Management Studio";
             }
             ImGui::EndTabItem();
         }
         if(ImGui::BeginTabItem("Uninstallers"))
         {
-            if(ImGui::Button("Uninstall MSSQL"))
+            if(ImGui::Button("Uninstall SQL Server"))
             {
-                action = "uninstall_mssql";
+                action = "Uninstall SQL Server";
             }
             ImGui::EndTabItem();
         }
@@ -271,12 +329,12 @@ void GUI::Index()
         {
             if(ImGui::Button("Update software"))
             {
-                action = "update_software";
+                action = "Update Software";
             }
 
             if(ImGui::Button("Update TeamViewer"))
             {
-                action = "update_teamviewer";
+                action = "Update TeamViewer";
             }
             ImGui::EndTabItem();
         }
@@ -284,25 +342,33 @@ void GUI::Index()
         ImGui::EndTabBar();
     }
 
-    if(action == "create_branel_users")
+    if(action == "Create Branel Users")
     {
-        this->OpenPopup("create_branel_users");
+        this->OpenPopup("Create Branel Users");
     }
-    else if(action == "uninstall_mssql")
+    else if(action == "Uninstall SQL Server")
     {
         this->OpenPopup("Backup");
     }
-    else if(action == "install_mssql")
+    else if(action == "Install SQL Server 19")
     {
-        this->OpenPopup("install_mssql");
+        this->OpenPopup("Install SQL Server 19");
     }
-    else if(action == "update_software")
+    else if(action == "Install CU for SQL Server 19")
     {
-        this->OpenPopup("update_software");
+        this->OpenPopup("Install CU for SQL Server 19");
     }
-    else if(action == "update_teamviewer")
+    else if(action == "Install SQL Management Studio")
     {
-        this->OpenPopup("update_teamviewer");
+        this->OpenPopup("Install SQL Management Studio");
+    }
+    else if(action == "Update Software")
+    {
+        this->OpenPopup("Update Software");
+    }
+    else if(action == "Update TeamViewer")
+    {
+        this->OpenPopup("Update TeamViewer");
     }
 
     ImGui::End();
@@ -338,7 +404,7 @@ void GUI::CreateBranelUsers()
     catch(const std::exception& e)
     {
         //Open popup
-        this->OpenPopup("admin_privileges");
+        this->OpenPopup("No rights!");
     }
 }
 
@@ -346,23 +412,15 @@ void GUI::UninstallMSSQL()
 {
     if(did_backup)
     {
-        
+        this->uninstalled_programs = ProgramManager::UninstallMSSQL();
 
-        std::rename("C:\\Program Files\\Microsoft SQL Server", "C:\\Program Files\\Microsoft SQL Server.old");
-        std::rename("C:\\Program Files (x86)\\Microsoft SQL Server", "C:\\Program Files (x86)\\Microsoft SQL Server.old");
-
-        this->OpenPopup("Uninstaller");
+        this->OpenPopup("Uninstall result");
 
         did_backup = false;
     }
 }
 
-void GUI::InstallMSSQL()
-{
-    //this->OpenWindow("install_mssql");
-}
-
-void GUI::UpdateSoftware(Program what)
+void GUI::InstallSoftware(Program what)
 {
     std::string installer_directory = ProgramManager::GetLatestInstallerDirectory("C:\\Branel\\");
 
@@ -380,7 +438,53 @@ void GUI::UpdateSoftware(Program what)
                 std::cout << "TeamViewer Installed!" << std::endl;
             }
 
-            this->OpenPopup("install_sucess");
+            this->OpenPopup("Install Result");
+        }
+        else if(what == Program::SQLServer19)
+        {
+            if(did_backup)
+            {
+                //Specify manually because there are a bunch of installers with the same name higher up in the folder hierarchy
+                std::string mssql_path = installer_directory + "\\Microsoft\\Microsoft SQL Server\\Microsoft SQL Server 2019 Express\\SQLEXPR_x64_ENU\\Express_ENU\\SETUP.EXE";
+
+                if(ProgramManager::StartProcess(mssql_path + " /ACTION=INSTALL /INDICATEPROGRESS /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /BROWSERSVCSTARTUPTYPE=Automatic /SQLCOLLATION=Danish_Norwegian_CI_AS /SECURITYMODE=SQL /SAPWD=Br5015edt /NPENABLED=0 /TCPENABLED=1 /QUIET /IACCEPTSQLSERVERLICENSETERMS") == 0)
+                {
+                    installed_programs.push_back("SQL Server 2019");
+                }
+
+                this->OpenPopup("Install Result");
+
+                did_backup = false;
+            }
+        }
+        else if(what == Program::SQLCU)
+        {
+            //Cumulative Update (KB5011644) for SQL Server 2019
+            std::string cumulative_update_path = ProgramManager::GetLatestInstaller(installer_directory, "SQLServer2019-KB5011644-x64.exe", "x64");
+            std::cout << "Cumulative Update Path: " << cumulative_update_path << std::endl;
+
+            if(ProgramManager::StartProcess(cumulative_update_path + " /qs /IAcceptSQLServerLicenseTerms /Action=Patch /InstanceName=BRANEL") == 0)
+            {
+                installed_programs.push_back("CU (KB5011644) for SQL Server 2019");
+            }
+
+            this->OpenPopup("Install Result");
+        }
+        else if(what == Program::SQLManagementStudio)
+        {
+            //SQL Management Studio
+            std::string sql_management_studio_path = ProgramManager::GetLatestInstaller(installer_directory, "SSMS-Setup-ENU.exe");
+            std::cout << "Cumulative Update Path: " << sql_management_studio_path << std::endl;
+
+            if(ProgramManager::StartProcess(sql_management_studio_path + " /install /quiet /norestart") == 0)
+            {
+                installed_programs.push_back("SQL Server Management Studio 18");
+            }
+
+            //Create public desktop shortcut of SSMS
+            ProgramManager::CreateLink(L"C:\\Program Files (x86)\\Microsoft SQL Server Management Studio 18\\Common7\\IDE\\Ssms.exe", L"C:\\Users\\Public\\Desktop\\Microsoft SQL Server Management Studio 18.lnk", L"", L"");
+
+            this->OpenPopup("Install Result");
         }
         else
         {
@@ -402,7 +506,7 @@ void GUI::UpdateSoftware(Program what)
                 std::cout << "TeamViewer Installed!" << std::endl;
             }
 
-            this->OpenPopup("install_result");
+            this->OpenPopup("Install Result");
         }
     }
 }

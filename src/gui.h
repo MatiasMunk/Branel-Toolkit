@@ -31,7 +31,10 @@ public:
     enum Program
     {
         All,
-        TeamViewer
+        TeamViewer,
+        SQLServer19,
+        SQLCU,
+        SQLManagementStudio
     };
 
     GUI();
@@ -44,8 +47,7 @@ public:
     void Index(); //Toolkit index
     void CreateBranelUsers(); //Create Branel Users
     void UninstallMSSQL(); //Uninstall MSSQL
-    void InstallMSSQL(); //Install MSSQL
-    void UpdateSoftware(Program what); //Update Software
+    void InstallSoftware(Program what); //Install Software
 };
 
 #endif // GUI_H
