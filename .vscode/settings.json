@@ -66,6 +66,7 @@
         "thread": "cpp",
         "xtree": "cpp",
         "filesystem": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "list": "cpp"
     }
 }

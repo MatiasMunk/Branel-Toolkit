@@ -35,8 +35,10 @@ public:
     void SetFocus(int widget);
 
     void Index(); //Toolkit index
-    void UninstallMSSQL(); //Uninstall MSSQL
     void CreateBranelUsers(); //Create Branel Users
+    void UninstallMSSQL(); //Uninstall MSSQL
+    void InstallMSSQL(); //Install MSSQL
+    void UpdateSoftware(); //Update Software
 };
 
 #endif // GUI_H

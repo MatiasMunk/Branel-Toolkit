@@ -105,7 +105,36 @@ void GUI::Process()
         this->uninstalled_programs.clear();
     }
 
-    if(ImGui::BeginPopupModal("Backup", NULL, flags))
+    if(ImGui::BeginPopupModal("admin_privileges", NULL, flags))
+    {
+        ImGui::Text("Could not complete action.");
+        ImGui::Text("Did run the program as administrator?");
+        if(ImGui::Button("OK"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+    else if(ImGui::BeginPopupModal("create_branel_users", NULL, flags))
+    {
+        ImGui::Text("Do you want to create the users?");
+        ImGui::Text("BrAdmin");
+        ImGui::Text("BrGuest");
+
+        if(ImGui::Button("Yes, continue."))
+        {
+            this->CreateBranelUsers();
+            ImGui::CloseCurrentPopup();
+        }
+        if(ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+    else if(ImGui::BeginPopupModal("Backup", NULL, flags))
     {
         ImGui::Text("Data will be removed during this process.");
         ImGui::Text("Did you remember to backup?");
@@ -123,15 +152,31 @@ void GUI::Process()
 
         ImGui::EndPopup();
     }
-    else if(ImGui::BeginPopupModal("create_branel_users", NULL, flags))
+    else if(ImGui::BeginPopupModal("install_mssql", NULL, flags))
     {
-        ImGui::Text("Do you want to create the users?");
-        ImGui::Text("BrAdmin");
-        ImGui::Text("BrGuest");
+        ImGui::Text("Do you want to install MSSQL?");
 
         if(ImGui::Button("Yes, continue."))
         {
-            this->CreateBranelUsers();
+            did_backup = true;
+            this->InstallMSSQL();
+            ImGui::CloseCurrentPopup();
+        }
+        if(ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+    else if(ImGui::BeginPopupModal("update_software", NULL, flags))
+    {
+        ImGui::Text("Do you want to update software?");
+
+        if(ImGui::Button("Yes, continue."))
+        {
+            did_backup = true;
+            this->UpdateSoftware();
             ImGui::CloseCurrentPopup();
         }
         if(ImGui::Button("Cancel"))
@@ -178,29 +223,110 @@ void GUI::Index()
         return;
     }
 
-    ImGui::Text("Branel Toolkit", 0);
+    ImGui::Text("Branel Toolkit - v0.1.8", 0);
 
     std::string action = "";
-    if(ImGui::Button("Uninstall MSSQL"))
-    {
-        action = "uninstall_mssql";
-    }
-
     if(ImGui::Button("Create Branel Users"))
     {
         action = "create_branel_users";
     }
 
-    if(action == "uninstall_mssql")
+    if(ImGui::Button("Uninstall MSSQL"))
     {
-        this->OpenPopup("Backup");
+        action = "uninstall_mssql";
     }
-    else if(action == "create_branel_users")
+
+    if(ImGui::Button("Install MSSQL"))
+    {
+        action = "install_mssql";
+    }
+
+    if(ImGui::Button("Update software"))
+    {
+        action = "update_software";
+    }
+
+    if(action == "create_branel_users")
     {
         this->OpenPopup("create_branel_users");
     }
+    else if(action == "uninstall_mssql")
+    {
+        this->OpenPopup("Backup");
+    }
+    else if(action == "install_mssql")
+    {
+        this->OpenPopup("install_mssql");
+    }
+    else if(action == "update_software")
+    {
+        this->OpenPopup("update_software");
+    }
 
     ImGui::End();
+}
+
+void GUI::CreateBranelUsers()
+{
+    /*
+    LPWSTR lpszDomain,
+    LPWSTR lpszUser,
+    LPWSTR lpszPassword,
+    LPWSTR lpszLocalGroup
+    */
+   /*
+    wchar_t name[] = L"BrAdmin";
+    wchar_t pass[] = L"Fiber.5015";
+    */
+
+    try
+    {
+        std::filesystem::remove("C:\\ProgramData\\Microsoft\\User Account Pictures\\user.png");
+        std::filesystem::remove("C:\\ProgramData\\Microsoft\\User Account Pictures\\user.bmp");
+
+        std::filesystem::copy("data/user.png", "C:\\ProgramData\\Microsoft\\User Account Pictures\\user.png", std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::copy("data/user.bmp", "C:\\ProgramData\\Microsoft\\User Account Pictures\\user.bmp", std::filesystem::copy_options::overwrite_existing);
+
+        LocalUser user;
+
+        if(user.GetLocalGroup(const_cast<wchar_t*>(L"Brugere")) == 0)
+        {
+            //Create BrAdmin
+            user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
+
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Brugere"));
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administratorer"));
+
+            //Create BrGuest
+            user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
+
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Brugere"));
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administratorer"));
+        }
+        else if(user.GetLocalGroup(const_cast<wchar_t*>(L"Users")) == 0)
+        {
+            //Create BrAdmin
+            user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
+
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Users"));
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administrators"));
+
+            //Create BrGuest
+            user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
+
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Users"));
+            user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administrators"));
+        }
+        else
+        {
+            std::cout << "There was an error adding the users!" << std::endl;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        //Open popup
+        this->OpenPopup("admin_privileges");
+    }
 }
 
 void GUI::UninstallMSSQL()
@@ -235,7 +361,6 @@ void GUI::UninstallMSSQL()
                 ReplaceStringInPlace(uninstaller, "x64\\SetupARP.exe", "Setup.exe");
                 if(uninstaller.find("Setup.exe") != std::string::npos)
                 {
-                    ///QS /ACTION=UNINSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK,SSMS,ADV_SSMS /INSTANCENAME=\"BRANEL\" /QUIET /IACCEPTSQLSERVERLICENSETERMS
                     uninstaller = uninstaller + " /ACTION=UNINSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /QUIET /IACCEPTSQLSERVERLICENSETERMS";
                 }
                 else if(uninstaller.find("SSMS-Setup-ENU.exe") != std::string::npos)
@@ -290,58 +415,112 @@ void GUI::UninstallMSSQL()
     }
 }
 
-void GUI::CreateBranelUsers()
+void GUI::InstallMSSQL()
 {
-    /*
-    LPWSTR lpszDomain,
-    LPWSTR lpszUser,
-    LPWSTR lpszPassword,
-    LPWSTR lpszLocalGroup
-    */
-   /*
-    wchar_t name[] = L"BrAdmin";
-    wchar_t pass[] = L"Fiber.5015";
-    */
+    //this->OpenWindow("install_mssql");
+}
 
-    //First delete existing and copy data/user.png and data/user.bmp to "C:\ProgramData\Microsoft\User Account Pictures"
-    std::filesystem::remove("C:\\ProgramData\\Microsoft\\User Account Pictures\\user.png");
-    std::filesystem::remove("C:\\ProgramData\\Microsoft\\User Account Pictures\\user.bmp");
-
-    std::filesystem::copy("data/user.png", "C:\\ProgramData\\Microsoft\\User Account Pictures\\user.png", std::filesystem::copy_options::overwrite_existing);
-    std::filesystem::copy("data/user.bmp", "C:\\ProgramData\\Microsoft\\User Account Pictures\\user.bmp", std::filesystem::copy_options::overwrite_existing);
-
-    LocalUser user;
-
-    if(user.GetLocalGroup(const_cast<wchar_t*>(L"Brugere")) == 0)
+void GUI::UpdateSoftware()
+{
+    std::vector<std::string> r;
+    for(auto& p : std::filesystem::directory_iterator("C:\\Branel\\"))
     {
-        //Create BrAdmin
-        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
-
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Brugere"));
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administratorer"));
-
-        //Create BrGuest
-        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
-
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Brugere"));
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administratorer"));
+        if (p.is_directory())
+        {
+            //Check if folder name contains "install"
+            std::string temp(p.path().string());
+            if(temp.find("Install") != std::string::npos)
+            {
+                r.push_back(temp);
+            }
+        }
     }
-    else if(user.GetLocalGroup(const_cast<wchar_t*>(L"Users")) == 0)
+    
+    if(r.size() > 1)
     {
-        //Create BrAdmin
-        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
-
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Users"));
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administrators"));
-
-        //Create BrGuest
-        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
-
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Users"));
-        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administrators"));
+        std::cout << "More than one install folder found!" << std::endl;
+        return;
+    }
+    else if(r.size() == 0)
+    {
+        std::cout << "No install folder found!" << std::endl;
+        return;
     }
     else
     {
-        std::cout << "There was an error adding the users!" << std::endl;
+        //Start finding software folders in the Install folder and install them
+        std::vector<std::string> software_to_check;
+        software_to_check.push_back("UltraVNC");
+        software_to_check.push_back("TeamViewer");
+
+        std::vector<std::string> software_folders;
+        std::vector<std::string> temp_newest;
+        std::vector<std::string> software_list;
+        //Loop through software_to_check
+        for(auto& folder_name : software_to_check)
+        {
+            for(auto& p : std::filesystem::directory_iterator(r.at(0) + "\\" + folder_name + "\\"))
+            {
+                if (p.is_directory())
+                {
+                    //Check if folder contains UltraVNC version folders
+                    std::string temp(p.path().string());
+                    if(temp.find(folder_name) != std::string::npos)
+                    {
+                        software_folders.push_back(temp);
+                    }
+                }
+            }
+        }
+        
+
+        //Print all elements in software vector
+        for(auto& folder : software_folders)
+        {
+            temp_newest.push_back(folder);
+            std::cout << folder << std::endl;
+
+            /*size_t pos = folder.find_last_of("UltraVNC") + 1;
+            std::string temp = folder.substr(pos);
+            std::cout << temp << std::endl;*/
+        }
+
+        //Check which of temp_newest is greater
+        std::string newest = temp_newest.at(0);
+        for(auto& folder : temp_newest)
+        {
+            if(folder > newest)
+            {
+                newest = folder;
+            }
+        }
+        std::cout << "Latest version of UltraVNC is: " << newest << std::endl;
+
+        //Find file in folder and install it
+        for(auto& p : std::filesystem::directory_iterator(newest))
+        {
+            if (p.is_regular_file())
+            {
+                std::string temp(p.path().string());
+                if(temp.find(".exe") != std::string::npos)
+                {
+                    std::cout << "Found installer: " << temp << std::endl;
+                    software_list.push_back(temp);
+                }
+            }
+        }
+
+        std::cout << software_list.at(0) << std::endl;
     }
+
+    /*
+    for (auto& folder : r)
+    {
+        std::cout << "Found folder: " << folder << std::endl;
+
+        size_t pos = folder.find_last_of("Install ") + 1;
+        std::string temp = folder.substr(pos);
+        std::cout << temp << std::endl;
+    }
+    */
 }
