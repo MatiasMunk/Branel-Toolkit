@@ -5,9 +5,13 @@
             "label": "C/C++: g++.exe build active file",
             "command": "C:\\mingw64\\bin\\g++.exe",
             "args": [
+                "-std=c++17",
                 "-fdiagnostics-color=always",
                 "-g",
                 "-DUNICODE",
+                "-O2",
+                "-s",
+                "-DNDEBUG",
                 "*.cpp",
                 "-o",
                 "${workspaceFolder}\\bin\\Branel Toolkit.exe",
@@ -15,7 +19,8 @@
                 "-I${workspaceFolder}\\include",
                 "-I${workspaceFolder}\\include\\imgui",
                 "-lallegro",
-                "-lallegro_primitives"
+                "-lallegro_primitives",
+                "-lnetapi32"
             ],
             "options": {
                 "cwd": "${fileDirname}"

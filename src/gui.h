@@ -5,13 +5,13 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <condition_variable>
-#include <thread>
-#include <chrono>
+#include <fstream>
+#include <filesystem>
 
 #include <allegro5/allegro5.h>
 
 #include "InstalledPrograms.h"
+#include "LocalUser.h"
 
 // to put all gui forms together and process it / render (monostate)
 class GUI
@@ -36,6 +36,7 @@ public:
 
     void Index(); //Toolkit index
     void UninstallMSSQL(); //Uninstall MSSQL
+    void CreateBranelUsers(); //Create Branel Users
 };
 
 #endif // GUI_H

@@ -4,6 +4,13 @@
 //#include "config.h"
 
 #include <iostream>
+
+#include <Windows.h>
+#include <lm.h>
+/*#include <LMaccess.h>
+#include <lmerr.h>
+#include <lmapibuf.h>*/
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_allegro5.h>
 
@@ -46,6 +53,10 @@ void GUI::Process()
         if(this->open_window == "uninstall_mssql")
         {
             this->UninstallMSSQL();
+        }
+        else if(this->open_window == "create_branel_users")
+        {
+            this->CreateBranelUsers();
         }
         /*else if(this->open_window == "settings")
         {
@@ -102,7 +113,25 @@ void GUI::Process()
         if(ImGui::Button("Yes, continue."))
         {
             did_backup = true;
-            UninstallMSSQL();
+            this->UninstallMSSQL();
+            ImGui::CloseCurrentPopup();
+        }
+        if(ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+    else if(ImGui::BeginPopupModal("create_branel_users", NULL, flags))
+    {
+        ImGui::Text("Do you want to create the users?");
+        ImGui::Text("BrAdmin");
+        ImGui::Text("BrGuest");
+
+        if(ImGui::Button("Yes, continue."))
+        {
+            this->CreateBranelUsers();
             ImGui::CloseCurrentPopup();
         }
         if(ImGui::Button("Cancel"))
@@ -157,9 +186,18 @@ void GUI::Index()
         action = "uninstall_mssql";
     }
 
+    if(ImGui::Button("Create Branel Users"))
+    {
+        action = "create_branel_users";
+    }
+
     if(action == "uninstall_mssql")
     {
         this->OpenPopup("Backup");
+    }
+    else if(action == "create_branel_users")
+    {
+        this->OpenPopup("create_branel_users");
     }
 
     ImGui::End();
@@ -249,5 +287,61 @@ void GUI::UninstallMSSQL()
         this->OpenPopup("Uninstaller");
 
         did_backup = false;
+    }
+}
+
+void GUI::CreateBranelUsers()
+{
+    /*
+    LPWSTR lpszDomain,
+    LPWSTR lpszUser,
+    LPWSTR lpszPassword,
+    LPWSTR lpszLocalGroup
+    */
+   /*
+    wchar_t name[] = L"BrAdmin";
+    wchar_t pass[] = L"Fiber.5015";
+    */
+
+    //First delete existing and copy data/user.png and data/user.bmp to "C:\ProgramData\Microsoft\User Account Pictures"
+    std::filesystem::remove("C:\\ProgramData\\Microsoft\\User Account Pictures\\user.png");
+    std::filesystem::remove("C:\\ProgramData\\Microsoft\\User Account Pictures\\user.bmp");
+
+    std::filesystem::copy("data/user.png", "C:\\ProgramData\\Microsoft\\User Account Pictures\\user.png", std::filesystem::copy_options::overwrite_existing);
+    std::filesystem::copy("data/user.bmp", "C:\\ProgramData\\Microsoft\\User Account Pictures\\user.bmp", std::filesystem::copy_options::overwrite_existing);
+
+    LocalUser user;
+
+    if(user.GetLocalGroup(const_cast<wchar_t*>(L"Brugere")) == 0)
+    {
+        //Create BrAdmin
+        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
+
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Brugere"));
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administratorer"));
+
+        //Create BrGuest
+        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
+
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Brugere"));
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administratorer"));
+    }
+    else if(user.GetLocalGroup(const_cast<wchar_t*>(L"Users")) == 0)
+    {
+        //Create BrAdmin
+        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
+
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Users"));
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administrators"));
+
+        //Create BrGuest
+        user.CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
+
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Users"));
+        user.AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administrators"));
+    }
+    else
+    {
+        std::cout << "There was an error adding the users!" << std::endl;
     }
 }
