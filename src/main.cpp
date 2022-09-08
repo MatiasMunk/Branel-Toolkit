@@ -4,7 +4,6 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_allegro5.h>
 
-#include "InstalledPrograms.h"
 #include "gui.h"
 
 int main()
@@ -42,7 +41,7 @@ int main()
     {
         throw std::runtime_error("Could not create display!");
     }
-    al_set_window_title(display, "Branel Toolkit");
+    al_set_window_title(display, "Branel Toolkit - v0.1.9");
 
     event_queue = al_create_event_queue();
     if(!event_queue)

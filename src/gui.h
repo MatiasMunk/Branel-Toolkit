@@ -5,13 +5,12 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <fstream>
 #include <filesystem>
 
 #include <allegro5/allegro5.h>
 
-#include "InstalledPrograms.h"
-#include "LocalUser.h"
+#include "ProgramManager.h"
+#include "NetUserManager.h"
 
 // to put all gui forms together and process it / render (monostate)
 class GUI
@@ -25,8 +24,16 @@ private:
     static bool did_backup;
 
     std::vector<std::string> uninstalled_programs;
+    std::vector<std::string> installed_programs;
+    std::vector<std::string> program_installers;
 
 public:
+    enum Program
+    {
+        All,
+        TeamViewer
+    };
+
     GUI();
     void Process();
     void Render();
@@ -38,7 +45,7 @@ public:
     void CreateBranelUsers(); //Create Branel Users
     void UninstallMSSQL(); //Uninstall MSSQL
     void InstallMSSQL(); //Install MSSQL
-    void UpdateSoftware(); //Update Software
+    void UpdateSoftware(Program what); //Update Software
 };
 
 #endif // GUI_H
