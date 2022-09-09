@@ -8,6 +8,8 @@
 
 int main()
 {
+    
+
     ALLEGRO_DISPLAY* display = nullptr;
     ALLEGRO_TIMER* timer = nullptr;
     ALLEGRO_EVENT_QUEUE* event_queue = nullptr;
@@ -41,7 +43,7 @@ int main()
     {
         throw std::runtime_error("Could not create display!");
     }
-    al_set_window_title(display, "Branel Toolkit - v0.1.9");
+    al_set_window_title(display, "Branel Toolkit - v0.2.0");
 
     event_queue = al_create_event_queue();
     if(!event_queue)

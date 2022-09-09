@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <fstream>
 #include <filesystem>
 
 #include <allegro5/allegro5.h>
@@ -22,6 +23,7 @@ private:
     static std::string popup_message;
     static int input_focus;
     static bool did_backup;
+    static bool need_restart;
 
     std::vector<std::string> uninstalled_programs;
     std::vector<std::string> installed_programs;

@@ -21,6 +21,7 @@ std::string GUI::open_popup;
 std::string GUI::popup_message;
 int GUI::input_focus;
 bool GUI::did_backup;
+bool GUI::need_restart;
 
 GUI::GUI()
 {
@@ -30,6 +31,7 @@ GUI::GUI()
         this->popup_message = "";
         this->input_focus = 0;
         this->did_backup = false;
+        this->need_restart = false;
 
         this->initialized_ = true;
     }
@@ -168,14 +170,27 @@ void GUI::Process()
     }
     else if(ImGui::BeginPopupModal("Install SQL Management Studio", NULL, flags))
     {
-        ImGui::Text("Do you want to update the following software?");
-        ImGui::Separator();
-        ImGui::Text("SQL Server Management Studio 18");
-
-        if(ImGui::Button("Yes, continue."))
+        if(this->need_restart)
         {
-            this->InstallSoftware(Program::SQLManagementStudio);
-            ImGui::CloseCurrentPopup();
+            ImGui::Text("Your computer needs to be restarted, before");
+            ImGui::Text("you can install this program!");
+
+            if(ImGui::Button("OK"))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        else
+        {
+            ImGui::Text("Do you want to update the following software?");
+            ImGui::Separator();
+            ImGui::Text("SQL Server Management Studio 18");
+
+            if(ImGui::Button("Yes, continue."))
+            {
+                this->InstallSoftware(Program::SQLManagementStudio);
+                ImGui::CloseCurrentPopup();
+            }
         }
         if(ImGui::Button("Cancel"))
         {
@@ -228,11 +243,9 @@ void GUI::Process()
             for(auto& program : this->installed_programs)
             {
                 ImGui::Text(program.c_str());
-                if(program == "SQL Server 2019")
+                if(program == "CU (KB5011644) for SQL Server 2019" || program == "SQL Server 2019")
                 {
-                    ImGui::Separator();
-                    ImGui::Text("Don't forget to configure SQL Server!");
-                    ImGui::Text("C:\\Windows\\SysWOW64\\SQLServerManager15.msc");
+                    this->need_restart = true;
                 }
             }
             if(ImGui::Button("OK"))
@@ -447,10 +460,53 @@ void GUI::InstallSoftware(Program what)
                 //Specify manually because there are a bunch of installers with the same name higher up in the folder hierarchy
                 std::string mssql_path = installer_directory + "\\Microsoft\\Microsoft SQL Server\\Microsoft SQL Server 2019 Express\\SQLEXPR_x64_ENU\\Express_ENU\\SETUP.EXE";
 
-                if(ProgramManager::StartProcess(mssql_path + " /ACTION=INSTALL /INDICATEPROGRESS /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /BROWSERSVCSTARTUPTYPE=Automatic /SQLCOLLATION=Danish_Norwegian_CI_AS /SECURITYMODE=SQL /SAPWD=Br5015edt /NPENABLED=0 /TCPENABLED=1 /QUIET /IACCEPTSQLSERVERLICENSETERMS") == 0)
-                {
-                    installed_programs.push_back("SQL Server 2019");
+                std::string configuration_file = std::filesystem::current_path().string() + "\\data\\ConfigurationFile_Install.ini";
+				std::cout << "Configuration: " << configuration_file << "" << std::endl;
+
+                //Determine if the locale is Danish or English
+                NetUserManager user_manager;
+				if(user_manager.GetLocalGroup(const_cast<wchar_t*>(L"Brugere")) == 0)
+    			{
+                    std::cout << mssql_path + " /SAPWD=Br5015edt /ConfigurationFile=" + configuration_file + " /IAcceptSQLServerLicenseTerms" << std::endl;
+                    if(ProgramManager::StartProcess(mssql_path + " /SAPWD=Br5015edt /ConfigurationFile=" + configuration_file + " /IAcceptSQLServerLicenseTerms") == 0)
+                    {
+                        installed_programs.push_back("SQL Server 2019");
+                    }
                 }
+                else
+                {
+                    std:: cout << mssql_path + " /SAPWD=Br5015edt /ConfigurationFile=" + configuration_file + " /AGTSVCACCOUNT=NT AUTHORITY\\NETWORKSERVICE /IAcceptSQLServerLicenseTerms" << std::endl;
+                    if(ProgramManager::StartProcess(mssql_path + " /SAPWD=Br5015edt /ConfigurationFile=" + configuration_file + " /AGTSVCACCOUNT=NT AUTHORITY\\NETWORKSERVICE /IAcceptSQLServerLicenseTerms") == 0)
+                    {
+                        installed_programs.push_back("SQL Server 2019");
+                    }
+                }
+
+                //Set SQL Ports
+                std::ofstream file;
+                file.open("data/ConfigureSQLPorts.ps1");
+
+                std::string powershell;
+                powershell = "\"C:\\Program Files (x86)\\Microsoft SQL Server\\150\\Tools\\Binn\\SQLPS.exe\"\n";
+                powershell += "import-module sqlps;\n";
+                powershell += "$MachineObject = new-object ('Microsoft.SqlServer.Management.Smo.WMI.ManagedComputer') $env:COMPUTERNAME\n";
+                powershell += "$instance = $MachineObject.getSmoObject(\n";
+                powershell += "   \"ManagedComputer[@Name='$env:COMPUTERNAME']/\" + \n";
+                powershell += "   \"ServerInstance[@Name='BRANEL']\"\n";
+                powershell += ")\n";
+                powershell += "$instance.ServerProtocols['Sm'].IsEnabled = $false\n";
+                powershell += "$instance.ServerProtocols['Sm'].Alter()\n";
+                powershell += "$instance.ServerProtocols['Tcp'].IPAddresses['IPAll'].IPAddressProperties['TcpDynamicPorts'].Value = \"1434\"\n";
+                powershell += "$instance.ServerProtocols['Tcp'].IPAddresses['IPAll'].IPAddressProperties['TcpPort'].Value = \"1433\"\n";
+                powershell += "$instance.ServerProtocols['Tcp'].Alter()";
+
+                file << powershell << endl;
+
+                file.close();
+
+                system("powershell -ExecutionPolicy Unrestricted -F data/ConfigureSQLPorts.ps1");
+
+                std::remove("data/ConfigureSQLPorts.ps1");
 
                 this->OpenPopup("Install Result");
 

@@ -1,4 +1,7 @@
 #include "ProgramManager.h"
+
+#include "NetUserManager.h"
+
 #include <algorithm>
 #include <regex>
 
@@ -139,14 +142,28 @@ std::vector<std::string> ProgramManager::UninstallMSSQL()
 			{
 				ReplaceStringInPlace(uninstall_cmd, "MsiExec.exe /I", "MsiExec.exe /qn /X");
 			}
-			else if(uninstall_cmd.find("x64\\SetupArp.exe") != std::string::npos)
+			else if(uninstall_cmd.find("x64\\SetupARP.exe") != std::string::npos)
 			{
 				ReplaceStringInPlace(uninstall_cmd, "x64\\SetupARP.exe", "Setup.exe");
 			}
 			
 			if(uninstall_cmd.find("Setup.exe") != std::string::npos)
 			{
-				uninstall_cmd = uninstall_cmd + " /ACTION=UNINSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /QUIET /IACCEPTSQLSERVERLICENSETERMS";
+				//uninstall_cmd = uninstall_cmd + " /ACTION=UNINSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /QUIET /IACCEPTSQLSERVERLICENSETERMS";
+				std::string path = std::filesystem::current_path().string();
+				std::cout << "Path: " << path << std::endl;
+
+				//Determine if the locale is Danish or English
+				//AGTSVCACCOUNT= depends on it
+				NetUserManager user_manager;
+				if(user_manager.GetLocalGroup(const_cast<wchar_t*>(L"Brugere")) == 0)
+    			{
+					uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + path + "\\ConfigurationFile_Uninstall.ini /IAcceptSQLServerLicenseTerms";
+				}
+				else
+				{
+					uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + path + "\\ConfigurationFile_Uninstall.ini /IAcceptSQLServerLicenseTerms";
+				}
 			}
 			else if(uninstall_cmd.find("SSMS-Setup-ENU.exe") != std::string::npos)
 			{
@@ -173,8 +190,25 @@ std::vector<std::string> ProgramManager::UninstallMSSQL()
 		std::this_thread::sleep_for(std::chrono::milliseconds(500ms));
 	}
 
-	std::rename("C:\\Program Files\\Microsoft SQL Server", "C:\\Program Files\\Microsoft SQL Server.old");
-	std::rename("C:\\Program Files (x86)\\Microsoft SQL Server", "C:\\Program Files (x86)\\Microsoft SQL Server.old");
+	//Delete old SQL Server folders
+	if(std::filesystem::exists("C:\\Program Files\\Microsoft SQL Server.old"))
+	{
+		std::filesystem::remove_all("C:\\Program Files\\Microsoft SQL Server.old");
+	}
+	if(std::filesystem::exists("C:\\Program Files (x86)\\Microsoft SQL Server.old"))
+	{
+		std::filesystem::remove_all("C:\\Program Files (x86)\\Microsoft SQL Server.old");
+	}
+	
+	//Rename current SQL Server folders to old
+	if(std::filesystem::exists("C:\\Program Files\\Microsoft SQL Server"))
+	{
+		std::filesystem::rename("C:\\Program Files\\Microsoft SQL Server", "C:\\Program Files\\Microsoft SQL Server.old");
+	}
+	if(std::filesystem::exists("C:\\Program Files (x86)\\Microsoft SQL Server"))
+	{
+		std::filesystem::rename("C:\\Program Files (x86)\\Microsoft SQL Server", "C:\\Program Files (x86)\\Microsoft SQL Server.old");
+	}
 
 	return uninstalled_programs;
 }
