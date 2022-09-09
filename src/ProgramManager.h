@@ -36,10 +36,6 @@ public:
 
 	static bool StartProcess(std::string cmd);
 
-	/**
-	 * @credits https://stackoverflow.com/questions/46477511/how-to-create-shortcut-with-win32-api-and-c-language
-	 * @credits https://stackoverflow.com/questions/63443681/creating-a-shortcut-lnk-using-windows-api
-	*/
 	static HRESULT CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, LPCWSTR lpszDesc, LPCWSTR lpszarg);
 
 	static std::vector<std::string> InstallMSSQL();

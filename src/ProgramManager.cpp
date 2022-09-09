@@ -203,7 +203,7 @@ std::string ProgramManager::GetLatestInstallerDirectory(std::string path_to_sear
 		if (p.is_directory())
 		{
 			std::string temp_folder(p.path().string());
-			if(temp_folder.find("Install") != std::string::npos)
+			if(temp_folder.find("Install") != std::string::npos && temp_folder.find("Install WU") == std::string::npos)
 			{
 				folders.push_back(p.path().string());
 			}
