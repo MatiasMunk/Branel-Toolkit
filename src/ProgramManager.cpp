@@ -1,7 +1,5 @@
 #include "ProgramManager.h"
 
-#include "NetUserManager.h"
-
 #include <algorithm>
 #include <regex>
 
@@ -153,17 +151,7 @@ std::vector<std::string> ProgramManager::UninstallMSSQL()
 				std::string path = std::filesystem::current_path().string();
 				std::cout << "Path: " << path << std::endl;
 
-				//Determine if the locale is Danish or English
-				//AGTSVCACCOUNT= depends on it
-				NetUserManager user_manager;
-				if(user_manager.GetLocalGroup(const_cast<wchar_t*>(L"Brugere")) == 0)
-    			{
-					uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + path + "\\ConfigurationFile_Uninstall.ini /IAcceptSQLServerLicenseTerms";
-				}
-				else
-				{
-					uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + path + "\\ConfigurationFile_Uninstall.ini /IAcceptSQLServerLicenseTerms";
-				}
+				uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + path + "\\ConfigurationFile_Uninstall.ini /IAcceptSQLServerLicenseTerms";
 			}
 			else if(uninstall_cmd.find("SSMS-Setup-ENU.exe") != std::string::npos)
 			{
