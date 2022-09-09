@@ -1,5 +1,5 @@
-#ifndef PROGRAMMANAGER_H
-#define PROGRAMMANAGER_H
+#ifndef PROGRAM_MANAGER_H
+#define PROGRAM_MANAGER_H
 
 #include <iostream>
 #include <vector>
@@ -14,7 +14,7 @@
 #include <shlguid.h>
 #include <shlobj.h>
 
-#include "RegistryKey.h"
+#include "registry_key.h"
 
 class Software
 {
@@ -38,7 +38,6 @@ public:
 
 	static HRESULT CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, LPCWSTR lpszDesc, LPCWSTR lpszarg);
 
-	static std::vector<std::string> InstallMSSQL();
 	static std::vector<std::string> UninstallMSSQL();
 
 	static std::string GetLatestInstallerDirectory(std::string path_to_search);
@@ -51,4 +50,4 @@ private:
 	static std::vector<Software>* GetUserInstallerKeyPrograms(RegistryKey* uInstallerKey, std::vector<Software>* ExistingProgramList);
 };
 
-#endif // PROGRAMMANAGER_H
+#endif // PROGRAM_MANAGER_H

@@ -1,16 +1,7 @@
-#include "ProgramManager.h"
+#include "program_manager.h"
 
 #include <algorithm>
 #include <regex>
-
-void ReplaceStringInPlace(std::string& subject, const std::string& search,
-                          const std::string& replace) {
-    size_t pos = 0;
-    while ((pos = subject.find(search, pos)) != std::string::npos) {
-         subject.replace(pos, search.length(), replace);
-         pos += replace.length();
-    }
-}
 
 static std::wstring GetInstallerKeyNameFromGuid(std::wstring GuidName);
 static void AddToList(std::vector<Software>* TheList, Software software);
@@ -27,7 +18,8 @@ ProgramManager::~ProgramManager(void)
 {
 }
 
-//Start process which takes std::string as the argument
+//This will wait for the process to finish
+//So it will inevitably return success once process is done
 bool ProgramManager::StartProcess(std::string cmd)
 {
 	STARTUPINFOA si;
@@ -105,118 +97,6 @@ HRESULT ProgramManager::CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, L
     return hres;
 }
 
-std::vector<std::string> ProgramManager::UninstallMSSQL()
-{
-	std::vector<std::string> uninstalled_programs;
-
-	std::vector<Software>* list = ProgramManager::GetInstalledPrograms(false);
-	for(vector<Software>::iterator iter = list->begin(); iter!=list->end(); iter++)
-	{
-		if(iter->DisplayName.find(L"Compact") != std::string::npos)
-		{
-			continue;
-		}
-		else if((iter->DisplayName.find(L"SQL Server") != std::string::npos)
-				|| (iter->DisplayName.find(L"T-SQL") != std::string::npos)
-				|| (iter->DisplayName.find(L"ODBC Driver") != std::string::npos))
-		{
-			std::wcout << L"Found: " << iter->DisplayName << std::endl;
-			if(iter->InstallLocation.empty())
-			{
-				std::wcout << L"Location: " << iter->Icon << std::endl;
-			}
-			else
-			{
-				std::wcout << L"Location: " << iter->InstallLocation << std::endl;
-			}
-
-			std::string uninstall_cmd(iter->UninstallString.begin(), iter->UninstallString.end());
-			
-			if(uninstall_cmd.find("MsiExec.exe /X") != std::string::npos)
-			{
-				ReplaceStringInPlace(uninstall_cmd, "MsiExec.exe /X", "MsiExec.exe /qn /X");
-			}
-			else if(uninstall_cmd.find("MsiExec.exe /I") != std::string::npos)
-			{
-				ReplaceStringInPlace(uninstall_cmd, "MsiExec.exe /I", "MsiExec.exe /qn /X");
-			}
-			else if(uninstall_cmd.find("x64\\SetupARP.exe") != std::string::npos)
-			{
-				ReplaceStringInPlace(uninstall_cmd, "x64\\SetupARP.exe", "Setup.exe");
-			}
-			
-			if(uninstall_cmd.find("Setup.exe") != std::string::npos)
-			{
-				//uninstall_cmd = uninstall_cmd + " /ACTION=UNINSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /QUIET /IACCEPTSQLSERVERLICENSETERMS";
-				std::string path = std::filesystem::current_path().string();
-				std::cout << "Path: " << path << std::endl;
-
-				uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + path + "\\ConfigurationFile_Uninstall.ini /IAcceptSQLServerLicenseTerms";
-			}
-			else if(uninstall_cmd.find("SSMS-Setup-ENU.exe") != std::string::npos)
-			{
-				uninstall_cmd = uninstall_cmd + " /quiet /norestart";
-			}
-
-			std::cout << "Uninstall command: " << uninstall_cmd << std::endl;
-
-			//Start uninstall process from the installer and wait for it to finish
-			//Returns 0 if successful
-			if(ProgramManager::StartProcess(&uninstall_cmd[0]) == 0)
-			{
-				std::string uninstalled_program_name(iter->DisplayName.begin(), iter->DisplayName.end());
-
-				uninstalled_programs.push_back(uninstalled_program_name);
-			}
-			else
-			{
-				std::wcout << "Failed to uninstall " << iter->DisplayName << std::endl;
-			}
-		}
-
-		//Wait 500 milliseconds before starting the next uninstall process
-		std::this_thread::sleep_for(std::chrono::milliseconds(500ms));
-	}
-
-	//Delete old SQL Server folders
-	if(std::filesystem::exists("C:\\Program Files\\Microsoft SQL Server.old"))
-	{
-		std::filesystem::remove_all("C:\\Program Files\\Microsoft SQL Server.old");
-	}
-	if(std::filesystem::exists("C:\\Program Files (x86)\\Microsoft SQL Server.old"))
-	{
-		std::filesystem::remove_all("C:\\Program Files (x86)\\Microsoft SQL Server.old");
-	}
-	
-	//Rename current SQL Server folders to old
-	if(std::filesystem::exists("C:\\Program Files\\Microsoft SQL Server"))
-	{
-		std::filesystem::rename("C:\\Program Files\\Microsoft SQL Server", "C:\\Program Files\\Microsoft SQL Server.old");
-	}
-	if(std::filesystem::exists("C:\\Program Files (x86)\\Microsoft SQL Server"))
-	{
-		std::filesystem::rename("C:\\Program Files (x86)\\Microsoft SQL Server", "C:\\Program Files (x86)\\Microsoft SQL Server.old");
-	}
-
-	return uninstalled_programs;
-}
-
-std::vector<std::string> ProgramManager::InstallMSSQL()
-{
-	std::vector<std::string> installed_programs;
-
-	std::string install_cmd = "C:\\Program Files\\Microsoft SQL Server\\140\\Setup.exe /ACTION=INSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /QUIET /IACCEPTSQLSERVERLICENSETERMS /SQLSVCACCOUNT=\"NT AUTHORITY\\NETWORK SERVICE\" /SQLSYSADMINACCOUNTS=\"BUILTIN\\Administrators\" /AGTSVCACCOUNT=\"NT AUTHORITY\\NETWORK SERVICE\" /AGTSVCSTARTUPTYPE=Automatic /SQLSVCSTARTUPTYPE=Automatic /SECURITYMODE=SQL /SAPWD=Password123 /TCPENABLED=1 /NPENABLED=0 /IACCEPTSQLSERVERLICENSETERMS";
-
-	//Start install process from the installer and wait for it to finish
-	//Returns 0 if successful
-	if(ProgramManager::StartProcess(&install_cmd[0]) == 0)
-	{
-		installed_programs.push_back("Microsoft SQL Server 2017");
-	}
-
-	return installed_programs;
-}
-
 std::string ProgramManager::GetLatestInstallerDirectory(std::string path_to_search)
 {
 	std::vector<std::string> folders;
@@ -269,16 +149,20 @@ std::string ProgramManager::GetLatestInstaller(std::string path_to_search, std::
 		}
 	}
 
-	std::string newest = software_installers.at(0);
-	for(auto& folder : software_installers)
+	std::string most_recent_installer = "";
+	if(!software_installers.empty())
 	{
-		if(folder > newest)
+		most_recent_installer = software_installers.at(0);
+		for(auto& folder : software_installers)
 		{
-			newest = folder;
+			if(folder > most_recent_installer)
+			{
+				most_recent_installer = folder;
+			}
 		}
 	}
 
-	return newest;
+	return most_recent_installer;
 }
 
 std::vector<Software>* ProgramManager::GetInstalledPrograms(bool IncludeUpdates)

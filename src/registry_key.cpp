@@ -1,4 +1,4 @@
-#include "RegistryKey.h"
+#include "registry_key.h"
 
 
 RegistryKey::RegistryKey(HKEY hkey, Arch arch)
@@ -133,4 +133,6 @@ wstring RegistryKey::GetValue(wstring query)
 	{
 		return L"";
 	}
+
+	return L"";
 }

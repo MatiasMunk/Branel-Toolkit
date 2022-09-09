@@ -1,5 +1,5 @@
-#ifndef NETUSERMANAGER_H
-#define NETUSERMANAGER_H
+#ifndef NET_USER_H
+#define NET_USER_H
 
 #include <iostream>
 #include <cstdio>
@@ -12,14 +12,12 @@ class NetUserManager
 public:
 	~NetUserManager(void);
 	
-    NET_API_STATUS CreateLocalUser(LPWSTR lpszDomain, LPWSTR lpszUser, LPWSTR lpszPassword, LPWSTR lpszComment, LPWSTR lpszLocalGroup);
+    NET_API_STATUS CreateLocalUser(LPWSTR lpszUser, LPWSTR lpszPassword, LPWSTR lpszComment);
     NET_API_STATUS GetLocalGroup(LPWSTR lpszLocalGroup);
     NET_API_STATUS CreateLocalGroup(LPWSTR lpszLocalGroup);
     NET_API_STATUS AddUserToGroup(LPWSTR lpszUser, LPWSTR lpszLocalGroup);
 
-    bool CreateBranelUsers();
-
 private:
 };
 
-#endif // NETUSERMANAGER_H
+#endif // NET_USER_H

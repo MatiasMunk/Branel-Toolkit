@@ -1,15 +1,12 @@
-#include "NetUserManager.h"
+#include "net_user.h"
 
 NetUserManager::~NetUserManager(void)
 {
 }
 
-//CreateLocalUser
-NET_API_STATUS NetUserManager::CreateLocalUser(  LPWSTR lpszDomain,
-                                            LPWSTR lpszUser,
-                                            LPWSTR lpszPassword,
-                                            LPWSTR lpszComment,
-                                            LPWSTR lpszLocalGroup )
+NET_API_STATUS NetUserManager::CreateLocalUser( LPWSTR lpszUser,
+                                                LPWSTR lpszPassword,
+                                                LPWSTR lpszComment )
 {
     USER_INFO_1                 user_info;
     LOCALGROUP_INFO_1           localgroup_info;
@@ -21,8 +18,8 @@ NET_API_STATUS NetUserManager::CreateLocalUser(  LPWSTR lpszDomain,
 
     ZeroMemory(&user_info, sizeof(user_info));
 
-    user_info.usri1_name         = lpszUser;            //UserName
-    user_info.usri1_password     = lpszPassword;        //PassWord
+    user_info.usri1_name         = lpszUser;
+    user_info.usri1_password     = lpszPassword;
     //user_info.usri1_full_name    = (LPWSTR)"Branel Admin";
     user_info.usri1_comment      = lpszComment;
     user_info.usri1_priv         = USER_PRIV_USER;
@@ -116,12 +113,12 @@ NET_API_STATUS NetUserManager::GetLocalGroup(LPWSTR lpszLocalGroup)
         }
         case NERR_GroupNotFound:
         {
-            printf("Local group %s does not exist: %d\n", lpszLocalGroup, err);
+            wprintf(L"Local group %s does not exist: %d\n", lpszLocalGroup, err);
             break;
         }
         default:
         {
-            printf("Error getting local group info: %d\n", err);
+            wprintf(L"Error getting local group info: %d\n", err);
             return err;
             break;
         }
@@ -239,46 +236,4 @@ NET_API_STATUS NetUserManager::AddUserToGroup( LPWSTR lpszUser,
 
     NetApiBufferFree( lpszPrimaryDC );
     return( err );
-}
-
-bool NetUserManager::CreateBranelUsers()
-{
-    if(GetLocalGroup(const_cast<wchar_t*>(L"Brugere")) == 0)
-    {
-        //Create BrAdmin
-        CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
-
-        AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Brugere"));
-        AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administratorer"));
-
-        //Create BrGuest
-        CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Brugere"));
-
-        AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Brugere"));
-        AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administratorer"));
-
-        return 0;
-    }
-    else if(GetLocalGroup(const_cast<wchar_t*>(L"Users")) == 0)
-    {
-        //Create BrAdmin
-        CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
-
-        AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Users"));
-        AddUserToGroup(const_cast<wchar_t*>(L"BrAdmin"), const_cast<wchar_t*>(L"Administrators"));
-
-        //Create BrGuest
-        CreateLocalUser(const_cast<wchar_t*>(L""), const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Fiber.5015"), const_cast<wchar_t*>(L"Branel IT"), const_cast<wchar_t*>(L"Users"));
-
-        AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Users"));
-        AddUserToGroup(const_cast<wchar_t*>(L"BrGuest"), const_cast<wchar_t*>(L"Administrators"));
-
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-
-    return 0;
 }

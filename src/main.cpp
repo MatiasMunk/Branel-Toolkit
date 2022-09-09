@@ -4,12 +4,11 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_allegro5.h>
 
+#include "application.h"
 #include "gui.h"
 
 int main()
 {
-    
-
     ALLEGRO_DISPLAY* display = nullptr;
     ALLEGRO_TIMER* timer = nullptr;
     ALLEGRO_EVENT_QUEUE* event_queue = nullptr;
@@ -43,7 +42,7 @@ int main()
     {
         throw std::runtime_error("Could not create display!");
     }
-    al_set_window_title(display, "Branel Toolkit - v0.2.0");
+    al_set_window_title(display, "Branel Toolkit - v0.2.5");
 
     event_queue = al_create_event_queue();
     if(!event_queue)
@@ -69,20 +68,20 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.IniFilename = NULL;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
 
     ImGui_ImplAllegro5_Init(display);
 
-    GUI gui;
+    Application application;
+    GUI gui(&application);
 
     bool done = false;
     bool redraw = false;
     while(!done)
     {
+        application.Act(); //"Tick" the program. This will execute actions in the queue
+
         ALLEGRO_EVENT event;
         al_wait_for_event(event_queue, &event);
 

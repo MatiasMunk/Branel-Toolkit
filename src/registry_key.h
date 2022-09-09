@@ -1,5 +1,5 @@
-#ifndef REGISTRY_KEY
-#define REGISTRY_KEY
+#ifndef REGISTRY_KEY_H
+#define REGISTRY_KEY_H
 
 #include <Windows.h>
 #include <string>
@@ -35,4 +35,4 @@ private:
 	RegistryKey(HKEY, Arch); // The constructor is private, not explicit initilization is available.
 };
 
-#endif
+#endif // REGISTRY_KEY_H
