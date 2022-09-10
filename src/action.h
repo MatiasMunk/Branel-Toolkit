@@ -92,13 +92,13 @@ public:
 
 private:
     /**
-     * @brief Check if the packet can extract a given number of bytes
+     * @brief Check if the packet action can extract a given number of bytes
      * 
-     * This function updates accordingly the state of the packet.
+     * This function updates accordingly the state of the packet action.
      * 
      * @param size Size to check
      * 
-     * @return True if \a size bytes can be read from the packet
+     * @return True if \a size bytes can be read from the packet action
      */
     bool checkSize(std::size_t size);
 

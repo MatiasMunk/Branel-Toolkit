@@ -20,7 +20,7 @@ public:
     Application();
     bool Initialize();
     void Act();
-    void Instruct(Action &packet);
+    void Instruct(Action &action);
 };
 
 #endif // APPLICATION_H

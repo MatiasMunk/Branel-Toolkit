@@ -123,23 +123,6 @@ int main()
     al_destroy_timer(timer);
     al_destroy_event_queue(event_queue);
     al_destroy_display(display);
-    
-	/*vector<Software>* list = InstalledPrograms::GetInstalledPrograms(false);
-	for(vector<Software>::iterator iter = list->begin(); iter!=list->end(); iter++)
-	{
-		std::wcout << L"Software: " << iter->DisplayName << std::endl;
-        std::wcout << L"Location: " << iter->InstallLocation << std::endl;
-        std::wcout << L"Version: " << iter->Version << std::endl;
-        std::wcout << L"Icon: " << iter->Icon << std::endl;
-        if(iter->Architecture == X86)
-            std::wcout << L"Architecture: X86" << std::endl;
-        else if(iter->Architecture == X64)
-            std::wcout << L"Architecture: X64" << std::endl;
-        else
-            std::wcout << L"Architecture: Unknown" << std::endl;
-
-        std::cout << std::endl;
-	}*/
 
     return 0;
 }
