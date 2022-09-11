@@ -57,6 +57,17 @@ void GUI::Process()
 
         ImGui::EndPopup();
     }
+    if(ImGui::BeginPopupModal("File not found", NULL, flags))
+    {
+        ImGui::Separator();
+        ImGui::Text(popup_message.c_str());
+        if(ImGui::Button("Close."))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
     if(ImGui::BeginPopupModal("Create users", NULL, flags))
     {
         if(popup_message == "min_length_pass")
@@ -124,6 +135,9 @@ void GUI::Process()
 
                 action << (unsigned char)ActionID::ACTION_INSTALL;
                 action << (unsigned char)Program::PROGRAM_SQLSERVER19;
+                action << "SQL Server 2019";
+                action << "SETUP.EXE";
+                action << "2019";
                 action << "";
 
                 application->Instruct(action);
@@ -145,7 +159,10 @@ void GUI::Process()
 
                 action << (unsigned char)ActionID::ACTION_INSTALL;
                 action << (unsigned char)Program::PROGRAM_SQLCU;
+                action << "Cumulative Update (KB 5011644)";
+                action << "SQLServer2019-KB5011644-x64.exe";
                 action << "";
+                action << "/X:temp";
 
                 application->Instruct(action);
 
@@ -178,6 +195,9 @@ void GUI::Process()
 
                     action << (unsigned char)ActionID::ACTION_INSTALL;
                     action << (unsigned char)Program::PROGRAM_SSMS;
+                    action << "SQL Server Management Studio 18";
+                    action << "SSMS-Setup-ENU.exe";
+                    action << "";
                     action << "/install /quiet /norestart";
 
                     application->Instruct(action);
@@ -200,6 +220,9 @@ void GUI::Process()
 
                 action << (unsigned char)ActionID::ACTION_INSTALL;
                 action << uint8_t(Program::PROGRAM_TEAMVIEWER);
+                action << "TeamViewer";
+                action << "TeamViewer-Host";
+                action << "";
                 action << " /S";
 
                 application->Instruct(action);
@@ -222,6 +245,9 @@ void GUI::Process()
 
                 action << (unsigned char)ActionID::ACTION_INSTALL;
                 action << uint8_t(Program::PROGRAM_ALL);
+                action << "";
+                action << "";
+                action << "";
                 action << "";
 
                 application->Instruct(action);

@@ -34,14 +34,15 @@ public:
 	ProgramManager(void);
 	~ProgramManager(void);
 
-	static bool StartProcess(std::string cmd);
+	static DWORD StartProcess(std::string cmd);
 
 	static HRESULT CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, LPCWSTR lpszDesc, LPCWSTR lpszarg);
 
 	static std::vector<std::string> UninstallMSSQL();
 
 	static std::string GetLatestInstallerDirectory(std::string path_to_search);
-	static std::string GetLatestInstaller(std::string path_to_search, std::string expected_installer_name, std::string optional = "");
+	static std::string GetLatestInstaller(std::string path_to_search, std::string search_query, std::string include_in_search = "", std::vector<std::string> omit_files = {});
+
 	static std::vector<Software>* GetInstalledPrograms(bool IncludeUpdates);
 
 private:

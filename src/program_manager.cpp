@@ -20,7 +20,7 @@ ProgramManager::~ProgramManager(void)
 
 //This will wait for the process to finish
 //So it will inevitably return success once process is done
-bool ProgramManager::StartProcess(std::string cmd)
+DWORD ProgramManager::StartProcess(std::string cmd)
 {
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
@@ -42,7 +42,7 @@ bool ProgramManager::StartProcess(std::string cmd)
 	)
 	{
 		printf("CreateProcess failed (%d).\n", GetLastError());
-		return 1;
+		return GetLastError();
 	}
 
 	//Wait until child process exits.
@@ -52,7 +52,7 @@ bool ProgramManager::StartProcess(std::string cmd)
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
 
-	return 0;
+	return GetLastError();
 }
 
 HRESULT ProgramManager::CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, LPCWSTR lpszDesc, LPCWSTR lpszarg)
@@ -129,21 +129,31 @@ std::string ProgramManager::GetLatestInstallerDirectory(std::string path_to_sear
 	return most_recent_install_folder;
 }
 
-std::string ProgramManager::GetLatestInstaller(std::string path_to_search, std::string expected_installer_name, std::string optional)
+std::string ProgramManager::GetLatestInstaller(std::string path_to_search, std::string search_query, std::string include_in_search, std::vector<std::string> omit_files)
 {
-	std::cout << "Searching for latest installer in " << path_to_search << std::endl;
+	printf("Searching for latest installer in: %s\n", path_to_search.c_str());
+
 	std::vector<std::string> software_installers;
+
+	//Iterale all directories in search directory recursively
 	for(auto& p : std::filesystem::recursive_directory_iterator(path_to_search))
 	{
+		//Currently iterated directory path
 		std::string temp(p.path().string());
-		if(temp.find(expected_installer_name) != std::string::npos)
+		//Find all installers with the expected installer name in the currently iterated directory
+		if(temp.find(search_query) != std::string::npos)
 		{
-			if(!optional.empty() && temp.find(optional) != std::string::npos)
+			if(!include_in_search.empty())
 			{
-				software_installers.push_back(temp);
+				if(temp.find(include_in_search) != std::string::npos)
+				{
+					printf("Found installer: %s with optional %s\n", temp.c_str(), include_in_search.c_str());
+					software_installers.push_back(temp);
+				}
 			}
 			else
 			{
+				printf("Found installer: %s without optional %s\n", temp.c_str(), include_in_search.c_str());
 				software_installers.push_back(temp);
 			}
 		}
@@ -152,16 +162,33 @@ std::string ProgramManager::GetLatestInstaller(std::string path_to_search, std::
 	std::string most_recent_installer = "";
 	if(!software_installers.empty())
 	{
-		most_recent_installer = software_installers.at(0);
-		for(auto& folder : software_installers)
+		for(auto& installer : software_installers)
 		{
-			if(folder > most_recent_installer)
+			if(!omit_files.empty())
 			{
-				most_recent_installer = folder;
+				bool check_next = false;
+				for(auto& omittable : omit_files)
+				{
+					if(installer.find(omittable) != std::string::npos)
+					{
+						check_next = true;
+					}
+				}
+
+				if(check_next)
+				{
+					continue;
+				}
+			}
+
+			if(installer > most_recent_installer)
+			{
+				most_recent_installer = installer;
 			}
 		}
 	}
 
+	printf("Selecting installer: %s\n", most_recent_installer.c_str());
 	return most_recent_installer;
 }
 
