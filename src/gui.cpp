@@ -103,6 +103,8 @@ void GUI::Process()
                 action << (unsigned char)Program::PROGRAM_SQLSERVER19;
                 action << "";
 
+                application->Instruct(action);
+
                 ImGui::CloseCurrentPopup();
             }
         }
@@ -121,6 +123,8 @@ void GUI::Process()
                 action << (unsigned char)ActionID::ACTION_INSTALL;
                 action << (unsigned char)Program::PROGRAM_SQLCU;
                 action << "";
+
+                application->Instruct(action);
 
                 ImGui::CloseCurrentPopup();
             }
@@ -147,7 +151,14 @@ void GUI::Process()
 
                 if(ImGui::Button("Yes, continue."))
                 {
-                    //this->InstallSoftware(Program::SQLManagementStudio);
+                    Action action;
+
+                    action << (unsigned char)ActionID::ACTION_INSTALL;
+                    action << (unsigned char)Program::PROGRAM_SSMS;
+                    action << "/install /quiet /norestart";
+
+                    application->Instruct(action);
+
                     ImGui::CloseCurrentPopup();
                 }
             }

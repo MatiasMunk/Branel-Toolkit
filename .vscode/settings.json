@@ -71,6 +71,7 @@
         "functional": "cpp",
         "array": "cpp",
         "unordered_map": "cpp",
-        "xhash": "cpp"
+        "xhash": "cpp",
+        "future": "cpp"
     }
 }
