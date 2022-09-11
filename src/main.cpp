@@ -42,7 +42,7 @@ int main()
     {
         throw std::runtime_error("Could not create display!");
     }
-    al_set_window_title(display, "Branel Toolkit - v0.2.5");
+    al_set_window_title(display, "Branel Toolkit - v0.2.7");
 
     event_queue = al_create_event_queue();
     if(!event_queue)

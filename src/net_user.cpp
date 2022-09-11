@@ -33,7 +33,7 @@ NET_API_STATUS NetUserManager::CreateLocalUser( LPWSTR lpszUser,
     {
         case NERR_Success:
         {
-            fprintf(stderr, "User added successfully!\n");
+            fprintf(stderr, "User created successfully!\n");
             break;
         }
         case NERR_InvalidComputer:
@@ -113,7 +113,7 @@ NET_API_STATUS NetUserManager::GetLocalGroup(LPWSTR lpszLocalGroup)
         }
         case NERR_GroupNotFound:
         {
-            wprintf(L"Local group %s does not exist: %d\n", lpszLocalGroup, err);
+            wprintf(L"Local group %ls does not exist: %d\n", lpszLocalGroup, err);
             break;
         }
         default:

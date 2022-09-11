@@ -59,27 +59,50 @@ void GUI::Process()
     }
     if(ImGui::BeginPopupModal("Create users", NULL, flags))
     {
-        ImGui::Text("Do you want to create the users?");
-        ImGui::Text("BrAdmin");
-        ImGui::Text("BrGuest");
-
-        if(ImGui::Button("Yes, continue."))
+        if(popup_message == "min_length_pass")
         {
-            Action action;
+            ImGui::Text("The password must be 10 characters long.");
 
-            action << (unsigned char)ActionID::ACTION_CREATE_USERS;
-            action << "Username";
-            action << "Password";
-
-            application->Instruct(action);
-            ImGui::CloseCurrentPopup();
+            if(ImGui::Button("Ok"))
+            {
+                ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+                this->OpenPopup("Create users");
+            }
         }
-        if(ImGui::Button("No, cancel."))
+        else
         {
-            ImGui::CloseCurrentPopup();
-        }
+            ImGui::Text("You are about to create the users");
+            ImGui::Text("BrAdmin");
+            ImGui::Text("BrGuest");
+            ImGui::Separator();
+            ImGui::Text("BrGuest password:");
+            static char buf[10];
+            ImGui::InputText("##Password", buf, 11, ImGuiInputTextFlags_Password);
 
-        ImGui::EndPopup();
+            if(ImGui::Button("Yes, continue."))
+            {
+                if(std::string(buf).length() != 10)
+                {
+                    this->OpenPopup("Create users", "min_length_pass");
+                }
+                else
+                {
+                    Action action;
+                    action << (unsigned char)ActionID::ACTION_CREATE_USERS;
+                    action << std::string(buf);
+
+                    application->Instruct(action);
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            if(ImGui::Button("No, cancel."))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
     }
     if(ImGui::BeginPopupModal("Install", NULL, flags))
     {
@@ -198,8 +221,8 @@ void GUI::Process()
                 Action action;
 
                 action << (unsigned char)ActionID::ACTION_INSTALL;
-                action << uint8_t(Program::PROGRAM_ULTRAVNC);
-                action << " /Silent";
+                action << uint8_t(Program::PROGRAM_ALL);
+                action << "";
 
                 application->Instruct(action);
                 
