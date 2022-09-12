@@ -12,7 +12,8 @@ std::string GUI::popup_message;
 std::vector<std::string> GUI::popup_data;
 int GUI::input_focus;
 bool GUI::did_backup;
-bool GUI::need_restart;
+bool GUI::just_installed_sql_server;
+bool GUI::just_uninstalled;
 
 GUI::GUI()
 {
@@ -20,7 +21,8 @@ GUI::GUI()
     this->popup_message = "";
     this->input_focus = 0;
     this->did_backup = false;
-    this->need_restart = false;
+    this->just_installed_sql_server = false;
+    this->just_uninstalled = false;
 }
 
 GUI::GUI(Application* application)
@@ -29,7 +31,8 @@ GUI::GUI(Application* application)
     this->popup_message = "";
     this->input_focus = 0;
     this->did_backup = false;
-    this->need_restart = false;
+    this->just_installed_sql_server = false;
+    this->just_uninstalled = false;
 
     this->application = application;
 }
@@ -115,63 +118,117 @@ void GUI::Process()
             ImGui::EndPopup();
         }
     }
+    if(ImGui::BeginPopupModal("Uninstall", NULL, flags))
+    {
+        ImGui::Text("You are about to uninstall SQL Server 2019");
+        ImGui::Separator();
+        ImGui::Text("WARNING:");
+        ImGui::Text("This will delete all existing data,");
+        ImGui::Text("and databases - backup recommended.");
+        ImGui::Separator();
+        ImGui::Text("Do you want to proceed?");
+
+        if(ImGui::Button("Yes, continue."))
+        {
+            Action action;
+
+            action << (unsigned char)ActionID::ACTION_UNINSTALL;
+
+            application->Instruct(action);
+
+            ImGui::CloseCurrentPopup();
+        }
+
+        if(ImGui::Button("Cancel"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
     if(ImGui::BeginPopupModal("Install", NULL, flags))
     {
         if(popup_message.find("SQLServer19") != std::string::npos)
         {
-            ImGui::Text("You are about to install the software(s)");
-            ImGui::Separator();
-            ImGui::Text("Microsoft SQL Server 2019");
-            ImGui::Separator();
-            ImGui::Text("WARNING:");
-            ImGui::Text("This can cause potential data loss");
-            ImGui::Text("of existing databases - backup recommended.");
-            ImGui::Separator();
-            ImGui::Text("Do you want to proceed?");
-
-            if(ImGui::Button("Yes, continue."))
+            if(this->just_uninstalled)
             {
-                Action action;
+                ImGui::Text("Your computer needs to be restarted, before");
+                ImGui::Text("you can install this program!");
 
-                action << (unsigned char)ActionID::ACTION_INSTALL;
-                action << (unsigned char)Program::PROGRAM_SQLSERVER19;
-                action << "SQL Server 2019";
-                action << "SETUP.EXE";
-                action << "2019";
-                action << "";
+                if(ImGui::Button("OK"))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            else
+            {
+                ImGui::Text("You are about to install the software(s)");
+                ImGui::Separator();
+                ImGui::Text("Microsoft SQL Server 2019");
+                ImGui::Separator();
+                ImGui::Text("WARNING:");
+                ImGui::Text("This can cause potential data loss");
+                ImGui::Text("of existing databases - backup recommended.");
+                ImGui::Separator();
+                ImGui::Text("Do you want to proceed?");
 
-                application->Instruct(action);
+                if(ImGui::Button("Yes, continue."))
+                {
+                    Action action;
 
-                ImGui::CloseCurrentPopup();
+                    action << (unsigned char)ActionID::ACTION_INSTALL;
+                    action << (unsigned char)Program::PROGRAM_SQLSERVER19;
+                    action << "SQL Server 2019";
+                    action << "SETUP.EXE";
+                    action << "2019";
+                    action << "";
+
+                    application->Instruct(action);
+
+                    ImGui::CloseCurrentPopup();
+                }
             }
         }
         else if(popup_message.find("SQLCU") != std::string::npos)
         {
-            ImGui::Text("You are about to install the software(s)");
-            ImGui::Separator();
-            ImGui::Text("SQL Server Hotfix (KB5011644)");
-            ImGui::Separator();
-            ImGui::Text("Do you want to proceed?");
-
-            if(ImGui::Button("Yes, continue."))
+            if(this->just_uninstalled)
             {
-                Action action;
+                ImGui::Text("Your computer needs to be restarted, before");
+                ImGui::Text("you can install this program!");
 
-                action << (unsigned char)ActionID::ACTION_INSTALL;
-                action << (unsigned char)Program::PROGRAM_SQLCU;
-                action << "Cumulative Update (KB 5011644)";
-                action << "SQLServer2019-KB5011644-x64.exe";
-                action << "";
-                action << "/X:temp";
+                if(ImGui::Button("OK"))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            else
+            {
+                ImGui::Text("You are about to install the software(s)");
+                ImGui::Separator();
+                ImGui::Text("SQL Server Hotfix (KB5011644)");
+                ImGui::Separator();
+                ImGui::Text("Do you want to proceed?");
 
-                application->Instruct(action);
+                if(ImGui::Button("Yes, continue."))
+                {
+                    Action action;
 
-                ImGui::CloseCurrentPopup();
+                    action << (unsigned char)ActionID::ACTION_INSTALL;
+                    action << (unsigned char)Program::PROGRAM_SQLCU;
+                    action << "Cumulative Update (KB 5011644)";
+                    action << "SQLServer2019-KB5011644-x64.exe";
+                    action << "";
+                    action << "/X:temp";
+
+                    application->Instruct(action);
+
+                    ImGui::CloseCurrentPopup();
+                }
             }
         }
         else if(popup_message.find("SQLManagementStudio") != std::string::npos)
         {
-            if(this->need_restart)
+            if(this->just_installed_sql_server)
             {
                 ImGui::Text("Your computer needs to be restarted, before");
                 ImGui::Text("you can install this program!");
@@ -277,8 +334,9 @@ void GUI::Process()
                     if(program == "SQL Server 2019" || program == "Cumulative Update (KB 5011644)")
                     {
                         //SQL SSMS needs restart after either of these softwares.
-                        this->need_restart = true;
+                        this->just_installed_sql_server = true;
                     }
+                    
                 }
             }
             else
@@ -296,6 +354,9 @@ void GUI::Process()
                 {
                     ImGui::Text(program.c_str());
                 }
+
+                //Computer needs to be restarted to begin a new installation
+                this->just_uninstalled = true;
             }
             else
             {

@@ -16,10 +16,21 @@ void ReplaceStringInPlace(std::string& subject, const std::string& search,
 
 namespace ActionHandlers::Uninstall
 {
+    std::vector<std::string> uninstalled_programs;
+
     void Actor(Action &action, std::array<intptr_t, 4> data_ptr)
     {
-        std::vector<std::string> uninstalled_programs;
+        //Clear any previous uninstall data
+        uninstalled_programs.clear();
 
+        //Uninstall SQL
+        UninstallSQL();
+        //Run it again, because the first time it excludes some MSSQL programs
+        UninstallSQL();
+    }
+
+    bool UninstallSQL()
+    {
         std::vector<Software>* list = ProgramManager::GetInstalledPrograms(false);
         for(vector<Software>::iterator iter = list->begin(); iter!=list->end(); iter++)
         {
@@ -59,17 +70,16 @@ namespace ActionHandlers::Uninstall
                 if(uninstall_cmd.find("Setup.exe") != std::string::npos)
                 {
                     //uninstall_cmd = uninstall_cmd + " /ACTION=UNINSTALL /FEATURES=SQL,AS,RS,IS,Tools,SQLENGINE,REPLICATION,FULLTEXT,CONN,IS,BC,SDK /INSTANCENAME=BRANEL /QUIET /IACCEPTSQLSERVERLICENSETERMS";
-                    std::string path = std::filesystem::current_path().string();
-                    std::cout << "Path: " << path << std::endl;
+                    std::string config_file = std::filesystem::current_path().string() + "\\data\\ConfigurationFile_Uninstall.ini";
 
-                    uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + path + "\\ConfigurationFile_Uninstall.ini /IAcceptSQLServerLicenseTerms";
+                    uninstall_cmd = uninstall_cmd + " /ConfigurationFile=" + config_file + " /IAcceptSQLServerLicenseTerms";
                 }
                 else if(uninstall_cmd.find("SSMS-Setup-ENU.exe") != std::string::npos)
                 {
                     uninstall_cmd = uninstall_cmd + " /quiet /norestart";
                 }
 
-                std::cout << "Uninstall command: " << uninstall_cmd << std::endl;
+                std::cout << "Uninstall cmd: " << uninstall_cmd << std::endl;
 
                 //Start uninstall process from the installer and wait for it to finish
                 //Returns 0 if successful

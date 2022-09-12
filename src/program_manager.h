@@ -38,8 +38,6 @@ public:
 
 	static HRESULT CreateLink(LPCWSTR lpszPathObj1, LPCWSTR lpszPathLink, LPCWSTR lpszDesc, LPCWSTR lpszarg);
 
-	static std::vector<std::string> UninstallMSSQL();
-
 	static std::string GetLatestInstallerDirectory(std::string path_to_search);
 	static std::string GetLatestInstaller(std::string path_to_search, std::string search_query, std::string include_in_search = "", std::vector<std::string> omit_files = {});
 

@@ -21,7 +21,8 @@ private:
     static std::vector<std::string> popup_data;
     static int input_focus;
     static bool did_backup;
-    static bool need_restart;
+    static bool just_installed_sql_server;
+    static bool just_uninstalled;
 
     Application* application;
 
