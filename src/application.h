@@ -11,14 +11,15 @@
 class Application
 {
 private:
-    static bool busy;
     static std::vector<Action> action_queue;
 
 public:
     static ActionHandler action_handler;
+    static bool busy;
+    std::vector<std::string> modified_programs;
 
     Application();
-    bool Initialize();
+    void Initialize();
     void Act();
     void Instruct(Action &action);
 };

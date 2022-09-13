@@ -1,17 +1,21 @@
 #include "application.h"
+
 #include "handlers/create_users.h"
 #include "handlers/install.h"
 #include "handlers/uninstall.h"
 
+#include "gui.h"
+
 #include <iostream>
 
-bool Application::busy;
 std::vector<Action> Application::action_queue;
 
 ActionHandler Application::action_handler;
+bool Application::busy;
 
 Application::Application()
 {
+    this->busy = false;
     this->Initialize();
 }
 
@@ -51,11 +55,10 @@ void Application::Instruct(Action &action)
 {
     if(!this->busy)
     {
-        //TODO:
-        //Once code is ported to instantiate a separate thread for installing,
-        //this->busy should be passed as a parameter to the action handler
-        //to prevent multiple installations from running at the same time
-        //which is not allowed by some installers.
         this->action_queue.push_back(action);
+    }
+    else
+    {
+        GUI().OpenPopup("Error", "Another setup is already in progress.\nPlease wait for it to finish.");
     }
 }

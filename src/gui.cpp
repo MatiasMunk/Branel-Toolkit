@@ -49,7 +49,7 @@ void GUI::Process()
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize;
 
-    if(ImGui::BeginPopupModal("Insufficient privileges", NULL, flags))
+    if(ImGui::BeginPopupModal("Error", NULL, flags))
     {
         ImGui::Separator();
         ImGui::Text(popup_message.c_str());
@@ -214,7 +214,7 @@ void GUI::Process()
                     Action action;
 
                     action << (unsigned char)ActionID::ACTION_INSTALL;
-                    action << (unsigned char)Program::PROGRAM_SQLCU;
+                    action << (unsigned char)Program::PROGRAM_SQLCU_EXTRACT;
                     action << "Cumulative Update (KB 5011644)";
                     action << "SQLServer2019-KB5011644-x64.exe";
                     action << "";
@@ -280,7 +280,7 @@ void GUI::Process()
                 action << "TeamViewer";
                 action << "TeamViewer-Host";
                 action << "";
-                action << " /S";
+                action << "/S";
 
                 application->Instruct(action);
                 

@@ -9,7 +9,7 @@ namespace ActionHandlers::Uninstall
 {
     void Actor(Action &action, std::array<intptr_t, 4> data_ptr);
 
-    bool UninstallSQL();
+    void UninstallSQL();
 };
 
 #endif // HANDLERS_UNINSTALL_H

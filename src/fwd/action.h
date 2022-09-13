@@ -14,6 +14,7 @@ enum class Program : unsigned char
 {
     PROGRAM_NONE,
     PROGRAM_SQLSERVER19,
+    PROGRAM_SQLCU_EXTRACT,
     PROGRAM_SQLCU,
     PROGRAM_SSMS,
     PROGRAM_TEAMVIEWER,
